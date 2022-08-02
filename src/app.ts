@@ -5,12 +5,22 @@ const app = express();
 app.use(express.json());
 
 function validateEmail(email: string): boolean {
-  var validate = /\S+@\S+\.\S+/;
-  return validate.test(email);
+  var exclude = /[^@-.w]|^[_@.-]|[._-]{2}|[@.]{2}|(@)[^@]*1/;
+  var check = /@[w-]+./;
+  var checkend = /.[a-zA-Z]{2,3}$/;
+  if (
+    email.search(exclude) != -1 ||
+    email.search(check) == -1 ||
+    email.search(checkend) == -1
+  ) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 function validateFields(value: any): boolean {
-  if (value == null) {
+  if (value === null) {
     return false;
   }
   return value;
@@ -20,7 +30,7 @@ function validateDevices(devices: devices[]) {
   let type = true;
   let condition = true;
 
-  if (devices == undefined) {
+  if (devices === undefined) {
     return false;
   }
 
@@ -133,7 +143,7 @@ app.post("/donation", (request, response) => {
   }
 
   // Se a quantidade de itens no array devices for diferente de deviceCount retornar status 400 com {error:true, errorMessage: "A quantidade de equipamentos ({$deviceCount}) não está de acordo com as informações de equipamentos enviados ({$sentDevices})"
-  if (deviceCount != devices.length) {
+  if (deviceCount !== devices.length) {
     return response.status(400).json({
       error: true,
       errorMessage: `A quantidade de equipamentos ${deviceCount} não está de acordo com as informações de equipamentos enviados ${devices.length}`,

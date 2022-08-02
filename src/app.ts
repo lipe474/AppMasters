@@ -25,8 +25,11 @@ function validateDevices(devices: devices[]) {
   }
 
   for (var i = 0; i < devices.length; i++) {
-    type = typeof devices[i].type === "string";
-    condition = typeof devices[i].condition === "string";
+    type =
+      devices[i].type === types.filter((type) => type === devices[i].type)[i];
+    condition =
+      devices[i].condition ===
+      conditions.filter((condition) => condition === devices[i].condition)[i];
     if (!type || !condition) {
       return false;
     }
@@ -34,20 +37,21 @@ function validateDevices(devices: devices[]) {
   return type && condition;
 }
 
-function filterDevices(devices: devices[]) {
-  const data = devices.map((item: devices) => {
-    return {
-      type: item.type,
-      condition: item.condition,
-    };
-  });
-  return data;
-}
-
 interface devices {
   type: string;
   condition: string;
 }
+
+const types = [
+  "notebook",
+  "desktop",
+  "netbook",
+  "screen",
+  "printer",
+  "scanner",
+];
+
+const conditions = ["working", "notWorking", "broken"];
 
 const data: {
   name: string;
@@ -148,7 +152,7 @@ app.post("/donation", (request, response) => {
     complement,
     neighborhood,
     deviceCount,
-    devices: filterDevices(devices),
+    devices,
   });
 
   // Se todos os dados estiverem ok, consideraremos que houve sucesso e então retornaremos status 200 com json {success:true}

@@ -5,46 +5,38 @@ const app = express();
 app.use(express.json());
 
 function validateEmail(email: string): boolean {
-  var exclude = /[^@-.w]|^[_@.-]|[._-]{2}|[@.]{2}|(@)[^@]*1/;
-  var check = /@[w-]+./;
-  var checkend = /.[a-zA-Z]{2,3}$/;
-  if (
-    email.search(exclude) != -1 ||
-    email.search(check) == -1 ||
-    email.search(checkend) == -1
-  ) {
-    return false;
-  } else {
-    return true;
-  }
+  const regex =
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return regex.test(email);
 }
 
-function validateFields(value: any): boolean {
-  if (value === null) {
-    return false;
-  }
-  return value;
+function validateFields(value: any[]): boolean {
+  value.map((item) => {
+    if (item === undefined || item === null || item === "") {
+      return false;
+    }
+  });
+
+  return true;
 }
 
 function validateDevices(devices: devices[]) {
-  let type = true;
-  let condition = true;
-
   if (devices === undefined) {
     return false;
   }
 
-  for (var i = 0; i < devices.length; i++) {
-    type =
-      devices[i].type === types.filter((type) => type === devices[i].type)[i];
-    condition =
-      devices[i].condition ===
-      conditions.filter((condition) => condition === devices[i].condition)[i];
-    if (!type || !condition) {
+  for (let i = 0; i < devices.length; i++) {
+    const device = devices[i];
+
+    if (
+      !types.includes(device.type) ||
+      !conditions.includes(device.condition)
+    ) {
       return false;
     }
   }
-  return type && condition;
+
+  return true;
 }
 
 interface devices {
@@ -106,15 +98,18 @@ app.post("/donation", (request, response) => {
 
   // Se algum campo faltar retornar status 400 com {error: true, requiredFields: [$field1, $field2, ...], errorMessage: "Todos os campos obrigatórios devem ser informados"}
   if (
-    !validateFields(name) ||
-    !validateFields(phone) ||
-    !validateFields(zip) ||
-    !validateFields(city) ||
-    !validateFields(state) ||
-    !validateFields(streetAddress) ||
-    !validateFields(number) ||
-    !validateFields(neighborhood) ||
-    !validateFields(deviceCount)
+    !validateFields([
+      name,
+      phone,
+      zip,
+      city,
+      state,
+      streetAddress,
+      number,
+      neighborhood,
+      deviceCount,
+      devices,
+    ])
   ) {
     return response.status(400).json({
       error: true,
@@ -143,7 +138,7 @@ app.post("/donation", (request, response) => {
   }
 
   // Se a quantidade de itens no array devices for diferente de deviceCount retornar status 400 com {error:true, errorMessage: "A quantidade de equipamentos ({$deviceCount}) não está de acordo com as informações de equipamentos enviados ({$sentDevices})"
-  if (deviceCount !== devices.length) {
+  if (Number(deviceCount) !== devices.length) {
     return response.status(400).json({
       error: true,
       errorMessage: `A quantidade de equipamentos ${deviceCount} não está de acordo com as informações de equipamentos enviados ${devices.length}`,
